@@ -1,6 +1,11 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@using Microsoft.AspNetCore.Authentication;
+@using Microsoft.AspNetCore.Identity;
+@using UrlStore.Models.ViewModels;
+
+@model RegisterViewModel
+
+@inject SignInManager<IdentityUser> signInManager
+
 @{
     Layout = "";
     ViewData["Title"] = "Register";
@@ -13,7 +18,7 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>Login - UrlStore</title>
+    <title>Register - UrlStore</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
 
@@ -65,61 +70,83 @@
                     <p class="text-center small">Ingresa los datos personales solicitados</p>
                   </div>
 
-                  <form class="row g-3 needs-validation" novalidate>
-                    <div class="col-12">
-                      <label for="yourName" class="form-label">Nombre Completo</label>
-                      <input type="text" name="name" class="form-control" id="yourName" required>
-                      <div class="invalid-feedback">Please, enter your name!</div>
-                    </div>
+                  <form asp-action="Register" asp-controller="Accounts" class="row g-3 needs-validation" asp-route-returnUrl="@ViewData["returnUrl"]">
+                      <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                     <div class="col-12">
-                      <label for="yourEmail" class="form-label">Email</label>
-                      <input type="email" name="email" class="form-control" id="yourEmail" required>
-                      <div class="invalid-feedback">Please enter a valid Email adddress!</div>
+                      <label asp-for="Name" class="form-label"></label>
+                      <input type="text" asp-for="Name" class="form-control" />
+                      <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
 
+
                     <div class="col-12">
-                      <label for="yourUsername" class="form-label">Usuario</label>
+                      <label asp-for="UserName" class="form-label"></label>
                       <div class="input-group has-validation">
-                        <input type="text" name="username" class="form-control" id="yourUsername" required>
-                        <div class="invalid-feedback">Please choose a username.</div>
+                        <input type="text" asp-for="UserName" class="form-control" />
+                        <span class="text-danger"></span>
                       </div>
                     </div>
 
                     <div class="col-12">
-                      <label for="yourPassword" class="form-label">Password</label>
-                      <input type="password" name="password" class="form-control" id="yourPassword" required>
-                      <div class="invalid-feedback">Please enter your password!</div>
+                      <label asp-for="Email" class="form-label"></label>
+                      <input type="email" asp-for="Email" class="form-control"/>
+                      <span asp-validation-for=Email class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                      <label asp-for="PasswordHash" class="form-label">Password</label>
+                      <input type="password" asp-for="PasswordHash" class="form-control" />
+                      <span asp-validation-for=PasswordHash class="text-danger"></span>
                     </div>
 
                     <div class="col-12 mb-3">
-                      <label for="yourPassword" class="form-label">Password</label>
-                      <input type="password" name="password" class="form-control" id="yourPassword" required>
-                      <div class="invalid-feedback">Please enter your password!</div>
+                      <label asp-for="ConfirmPasswordHash" class="form-label"></label>
+                      <input type="password" asp-for="ConfirmPasswordHash" class="form-control" />
+                      <span asp-validation-for="ConfirmPasswordHash" class="text-danger"></span>
                     </div>
 
                     <div class="col-12">
                       <button class="btn btn-primary w-100" type="submit">Crear cuenta</button>
                     </div>
                     <div class="col-12">
-                      <p class="small mb-0 text-center">Ya tienes cuenta? <a href="pages-login.html">Iniciar Sesión</a></p>
+                      <p class="small mb-0 text-center">Ya tienes cuenta? 
+                          <a asp-action="Login" asp-controller="Accounts">Iniciar Sesión</a></p>
                     </div>
                   </form>
 
-                  <div class="mt-3">
-                      <form>
-                          <p class="text-center">Iniciar con metodos externos</h3>
-                          <hr/>
-                          <div class="d-flex gap-3">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-facebook"></i>acebook
-                            </button>
-                            <button type="submit" class="btn btn-warning text-white w-100">
-                                <i class="bi bi-google"></i>oogle
-                            </button>
-                          </div>
-                      </form>
-                  </div>
+                  @*External Access*@
+                  @{
+                      var schemes = await signInManager.GetExternalAuthenticationSchemesAsync();
+                      List<AuthenticationScheme> providers = schemes.ToList();
+                  }
+
+                  @if(providers.Count() > 0)
+                  {
+                      <div class="mt-3">
+                          <form asp-action="ExternalAccess" asp-controller="Accounts" method="post" asp-route-returnUrl="@ViewData["returnUrl"]">
+                              <p class="text-center">Iniciar con metodos externos</p>
+                              <hr/>
+                              <div class="d-flex gap-3">
+                                @foreach(AuthenticationScheme provider in providers)
+                                {
+                                    @if(provider.Name == "Facebook")
+                                    {
+                                        <button type="submit" value="@provider.Name" name="provider" class="btn btn-primary w-100">
+                                            <i class="bi bi-facebook"></i>acebook
+                                        </button>
+                                    }
+                                    @if(provider.Name == "Google")
+                                    {
+                                                            <button type="submit" value="@provider.Name" name="provider" class="btn btn-warning text-white w-100">
+                                            <i class="bi bi-google"></i>oogle
+                                        </button>
+                                    }
+                                }
+                              </div>
+                          </form>
+                      </div>
+                  }
 
                 </div>
               </div>
