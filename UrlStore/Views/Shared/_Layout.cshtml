@@ -1,7 +1,15 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using UrlStore.Helpers;
 
 @inject SignInManager<IdentityUser> signinManager
 @inject UserManager<IdentityUser> userManager
+@inject ApplicationDbContext context
+
+@{
+    var userId = User.GetUserId();
+    var user = context.Users.FirstOrDefault(x => x.Id == userId);
+    var urlProfileImage = user.Photo;
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -48,11 +56,11 @@
                 <li class="nav-item dropdown pe-3">
 
                     <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-                        <img src="~/img/profile-img.jpg" alt="Profile" class="rounded-circle">
+                        <img src="@urlProfileImage" alt="Profile" class="rounded-circle">
                         <span class="d-none d-md-block dropdown-toggle ps-2">
                             @if(signinManager.IsSignedIn(User))
                             {
-                                @userManager.GetUserName(User)
+                                @userManager.GetUserName(User) 
                             }
                         </span>
                     </a><!-- End Profile Iamge Icon -->
@@ -72,7 +80,7 @@
                         </li>
 
                         <li>
-                            <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                            <a class="dropdown-item d-flex align-items-center" asp-action="Profile" asp-controller="Accounts">
                                 <i class="bi bi-person"></i>
                                 <span>Mi Perfil</span>
                             </a>
@@ -190,6 +198,10 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/main.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        const url = "@Url.Action("GetProfileImage", "Profiles")";
+    </script>
+    <script src="~/js/index.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

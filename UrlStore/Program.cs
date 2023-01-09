@@ -56,6 +56,8 @@ builder.Services.AddTransient<IEmailSender, MailJet>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+builder.Services.AddTransient<IFileStorage, LocalFileStorage>();
+
 var app = builder.Build();
 
 /*==================================*/

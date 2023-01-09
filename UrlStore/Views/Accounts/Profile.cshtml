@@ -1,0 +1,78 @@
+﻿@using UrlStore.Models.ViewModels;
+@model ProfileViewModel
+
+@{
+    ViewData["Title"] = "Mi Perfil";
+}
+
+<section class="section profile">
+    <div class="row">
+       
+        <div class="col-md-12">
+
+            <div class="card p-2">
+                <div class="card-body pt-3">
+                    <div class="tab-pane profile-edit pt-3" id="profile-edit">
+
+                        <!-- Profile Edit Form -->
+                        <form asp-controller="Accounts" enctype="multipart/form-data" asp-action="Profile" method="post">
+
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                            <div class="row mb-3">
+                                <label asp-for="Image" class="col-md-4 col-lg-3 col-form-label"></label>
+                                <div class="col-md-8 col-lg-9">
+                                    <img src="@Model.Photo" class="rounded-circle" alt="Profile">
+                                    <div class="pt-2 ">
+                                            <input type="file" asp-for="Image" accept="image/*" class="form-control" />
+                                    </div>
+                                    <div>
+                                        <span asp-validation-for="Image"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" asp-for="Photo" />
+                            
+                            <div class="row mb-3">
+                                <label asp-for="Name" class="col-md-4 col-lg-3 col-form-label"></label>
+                                <div class="col-md-8 col-lg-9">
+                                    <input asp-for="Name" type="text" class="form-control" id="fullName" />
+                                </div>
+                                <div>
+                                    <span asp-validation-for="Name"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <label asp-for="UserName" class="col-md-4 col-lg-3 col-form-label"></label>
+                                <div class="col-md-8 col-lg-9">
+                                    <input asp-for="UserName" type="text" class="form-control" id="fullName" />
+                                </div>
+                                <div>
+                                    <span asp-validation-for="UserName"></span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <label asp-for="Email" class="col-md-4 col-lg-3 col-form-label">Email</label>
+                                <div class="col-md-8 col-lg-9">
+                                    <input asp-for="Email" disabled type="email" class="form-control" id="Email" />
+                                </div>
+                                <div>
+                                    <span asp-validation-for="Email"></span>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                            </div>
+                        </form><!-- End Profile Edit Form -->
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+

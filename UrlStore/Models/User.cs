@@ -9,5 +9,7 @@ namespace UrlStore.Models
         [StringLength(100, MinimumLength = 5)]
         [Display(Name = "Nombre Completo")]
         public string Name { get; set; }
+
+        public string Photo { get; set; }
     }
 }

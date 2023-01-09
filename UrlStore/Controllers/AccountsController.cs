@@ -3,9 +3,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.IO;
 using System.Security.Claims;
+using UrlStore.Helpers;
+using UrlStore.Migrations;
 using UrlStore.Models;
 using UrlStore.Models.ViewModels;
+using UrlStore.Services;
 
 namespace UrlStore.Controllers
 {
@@ -18,11 +23,15 @@ namespace UrlStore.Controllers
         private readonly SignInManager<IdentityUser> signInManager;
         private readonly IEmailSender emailSender;
         private readonly RoleManager<IdentityRole> roleManager;
+        private readonly IFileStorage fileStorage;
+        private readonly IWebHostEnvironment env;
+        private readonly IHttpContextAccessor httpContextAccessor;
 
         public AccountsController(
             ApplicationDbContext context, IMapper mapper, 
             UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager,
-            IEmailSender emailSender, RoleManager<IdentityRole> roleManager
+            IEmailSender emailSender, RoleManager<IdentityRole> roleManager, IFileStorage fileStorage,
+            IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor
             )
         {
             this.context = context;
@@ -31,7 +40,9 @@ namespace UrlStore.Controllers
             this.signInManager = signInManager;
             this.emailSender = emailSender;
             this.roleManager = roleManager;
-
+            this.fileStorage = fileStorage;
+            this.env = env;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         /*==================================================*/
@@ -73,6 +84,8 @@ namespace UrlStore.Controllers
 
                 await signInManager.SignInAsync(user, isPersistent: true);
 
+                ViewData["profile"] = await this.GetProfileImage();
+
                 return LocalRedirect(returnUrl);
             }
 
@@ -108,7 +121,11 @@ namespace UrlStore.Controllers
                 return View(model);
             }
 
-            if(result.Succeeded) return LocalRedirect(returnUrl);
+            if (result.Succeeded)
+            {
+                ViewData["profile"] = await this.GetProfileImage();
+                return LocalRedirect(returnUrl);
+            }
             
             ModelState.AddModelError(string.Empty, "Acceso denegado!!");
 
@@ -219,6 +236,60 @@ namespace UrlStore.Controllers
             return View(model);
         }
 
+        /*==================================================*/
+        /*================ Profile =================*/
+        /*==================================================*/
+
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var userId = User.GetUserId();
+            var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            if (user == null) return View(nameof(Error404));
+            var profile = mapper.Map<ProfileViewModel>(user);
+            return View(profile);
+        }
+        
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile([FromForm] ProfileViewModel model)
+        {
+            if(!ModelState.IsValid) return View(model);
+
+            var userId = User.GetUserId();
+            var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            model.Email = user.Email;
+            user = mapper.Map(model, user);
+            if(model.Image != null)
+            {
+                using(var memoryStream = new MemoryStream())
+                {
+                    await model.Image.CopyToAsync(memoryStream);
+                    var content = memoryStream.ToArray();
+                    var extension = Path.GetExtension(model.Image.FileName);
+                    user.Photo = await fileStorage.Update(user.Photo, content, extension, "Profiles", model.Image.ContentType);
+                }
+            }
+
+            await userManager.UpdateAsync(user);
+            await signInManager.RefreshSignInAsync(user);
+
+            return RedirectToAction(nameof(Profile));
+        }
+
+        private async Task<ActionResult<string>> GetProfileImage()
+        {
+            var userId = User.GetUserId();
+            var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            if (user.Photo is null)
+            {
+                var urlBase = $"{httpContextAccessor.HttpContext.Request.Scheme}://{httpContextAccessor.HttpContext.Request.Host}";
+                var urlImageDefault = Path.Combine(urlBase, "profiles", "profile.png").Replace("\\", "/");
+                return urlImageDefault;
+            }
+            return user.Photo;
+        }
 
         /*==================================================*/
         /*===================== Extras =====================*/
@@ -235,6 +306,7 @@ namespace UrlStore.Controllers
         {
             return View();
         }
+
 
         /*==================================================*/
         /*==================== Helpers =====================*/

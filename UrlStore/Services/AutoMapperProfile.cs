@@ -12,6 +12,8 @@ namespace UrlStore.Services
             //        De             ->  A
             CreateMap<RegisterViewModel, User>();
             CreateMap<LoginViewModel, User>();
+            CreateMap<User, ProfileViewModel>();
+            CreateMap<ProfileViewModel, User>();
         }
     }
 }
